@@ -1,0 +1,159 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package User.Dao;
+
+import User.dbutil.DBConnection;
+import User.pojo.DoctorPojo;
+import User.pojo.PatientPojo;
+import User.pojo.UserDetailsPojo;
+import User.pojo.UserPojo;
+import User.pojo.UserProfile;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+/**
+ *
+ * @author Arun
+ */
+public class DoctorDao {
+     public static String getNewId()throws SQLException
+    {
+     Connection conn=DBConnection.getConnection();
+     Statement st=conn.createStatement();
+    ResultSet rs =st.executeQuery("select max(doctorid) from doctors");
+    int id=1;
+   rs.next();
+   String doctorid=rs.getString(1);
+   int eno =Integer.parseInt(doctorid.substring(3));
+       
+        id=id+eno;
+    
+    String sr ="DOC"+id;
+    System.out.println(sr);
+    return sr;  
+    }
+      public static HashMap<String,String> getNonRegisterDoctorList() throws SQLException{
+        Connection conn=DBConnection.getConnection();
+        String qry="select empid,empname from employees where role='doctor' and empid not in (select empid from users where usertype='DOCTOR')";
+    Statement st=conn.createStatement();  
+    ResultSet rs =st.executeQuery(qry);
+    HashMap<String,String> doctor=new HashMap();
+    while(rs.next()){
+        String name=rs.getString(1);
+        String id=rs.getString(2);
+        doctor.put(name,id);
+        
+    }
+    return doctor;
+    }
+        public static boolean addDoctor1(DoctorPojo user) throws SQLException
+    {
+          Connection conn=DBConnection.getConnection();
+    String qry="Insert into doctors values(?,?,?,?,'Y')";
+    PreparedStatement ps=conn.prepareStatement(qry);
+    ps.setString(1,user.getUserid());
+    ps.setString(2,user.getDoctorId());
+    ps.setString(3,user.getQualification());
+     ps.setString(4,user.getSpecialist());
+    
+   
+    
+    
+    int x=ps.executeUpdate();
+    return x>0;
+        
+    }
+         public static boolean addDoctor(UserDetailsPojo user) throws SQLException
+    {
+          Connection conn=DBConnection.getConnection();
+    String qry="Insert into users values(?,?,?,?,?)";
+    PreparedStatement ps=conn.prepareStatement(qry);
+    ps.setString(1,user.getUserid());
+    ps.setString(2,user.getUsername());
+    ps.setString(3,user.getEmpid());
+    ps.setString(4,user.getPassword());
+    ps.setString(5,user.getUserType());
+    
+    int x=ps.executeUpdate();
+    return x>0;
+        
+    }
+           public static ArrayList<DoctorPojo>getALLEmp() throws SQLException
+    {
+         Connection conn=DBConnection.getConnection();
+    Statement st=conn.createStatement();
+    ResultSet rs =st.executeQuery("select * from doctors");
+    ArrayList<DoctorPojo>empList=new ArrayList();
+    while(rs.next()){
+        DoctorPojo e=new DoctorPojo();
+          
+        e.setUserid(rs.getString(1));
+        e.setDoctorId(rs.getString(2));
+        e.setQualification(rs.getString(3));
+        e.setSpecialist(rs.getString(4));
+        empList.add(e);
+          
+    }
+    return empList;
+}
+              public static boolean UpdateDoctor(String a) throws SQLException
+    {
+          Connection conn=DBConnection.getConnection();
+    String qry="Update doctors set active='N' where doctorid=?";
+    PreparedStatement ps=conn.prepareStatement(qry);
+    
+ 
+    ps.setString(1,a);
+   
+    
+    int x=ps.executeUpdate();
+    return x>0;
+        
+    }
+               public static HashMap<String,String> getDoctorList() throws SQLException{
+        Connection conn=DBConnection.getConnection();
+        String qry="select doctorid,userid from doctors";
+    Statement st=conn.createStatement();  
+    ResultSet rs =st.executeQuery(qry);
+    HashMap<String,String> doctor=new HashMap();
+    while(rs.next()){
+        String docid=rs.getString(1);
+        String userid=rs.getString(2);
+        doctor.put(docid,userid);
+        
+    }
+    return doctor;
+    }
+               public static ArrayList<PatientPojo>getPatient() throws SQLException
+    { System.out.println(UserProfile.getUsername());
+        
+         Connection conn=DBConnection.getConnection();
+         
+         String qry="select p_id,f_name,opd from patient where doctor_id IN(select doctorid from doctors where userid IN(select userid from users where username=?))" ;
+    
+         PreparedStatement ps=conn.prepareStatement(qry);
+         ps.setString(1,UserProfile.getUsername());
+    ResultSet rs =ps.executeQuery();
+    ArrayList<PatientPojo>patientList=new ArrayList();
+    while(rs.next()){
+        PatientPojo e=new PatientPojo();
+        e.setPatientid(rs.getString(1));
+        e.setFirstname(rs.getString(2));
+        e.setOPD(rs.getString(3));
+        patientList.add(e);
+      
+    }
+      System.out.println(patientList);
+    return patientList;
+        
+    }
+               
+}
